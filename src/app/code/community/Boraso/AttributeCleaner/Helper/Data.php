@@ -83,7 +83,7 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
 
-    protected function deleteAttribute(Mage_Customer_Model_Attribute $attribute)
+    protected function deleteAttribute(Mage_Catalog_Model_Resource_Eav_Attribute $attribute)
     {
         if( Mage::getStoreConfig('attributecleaner/settings/dryrun') ) {
 
