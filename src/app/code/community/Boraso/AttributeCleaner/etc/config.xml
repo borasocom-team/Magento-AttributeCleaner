@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Boraso_AttributeCleaner>
+            <version>0.1.0</version>
+        </Boraso_AttributeCleaner>
+    </modules>
+    <global>
+        <models>
+            <boraso_attributecleaner>
+                <class>Boraso_AttributeCleaner_Model</class>
+                <resourceModel>boraso_attributecleaner_resource</resourceModel>
+            </boraso_attributecleaner>
+        </models>
+        <helpers>
+            <boraso_attributecleaner>
+                <class>Boraso_AttributeCleaner_Helper</class>
+            </boraso_attributecleaner>
+        </helpers>
+    </global>
+
+
+    <crontab>
+        <jobs>
+            <boraso_attributecleaner>
+                <schedule>
+                    <config_path>attributecleaner_cron_setting</config_path>
+                </schedule>
+                <run>
+                    <model>boraso_attributecleaner/observer::run</model>
+                </run>
+            </boraso_attributecleaner>
+        </jobs>
+    </crontab>
+
+    <default>
+        <attributecleaner>
+            <settings>
+                <modenabled>1</modenabled>
+                <attributecleaner_cron_setting>0 6 * * *</attributecleaner_cron_setting>
+                <dryrun>1</dryrun>
+            </settings>
+        </attributecleaner>
+    </default>
+
+</config>
