@@ -24,7 +24,7 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
                 $attribute_system   = $attribute->getIsUserDefined() ? false : true;
 
                 $this->log("### Processing an attribute file", "-");
-                $this->log("#" . $attribute_code . "#");
+                $this->log("#" . $attribute_code . "# [" . $attribute_id . "]");
                 $this->log("#" . $table . "#");
 
 
@@ -46,8 +46,9 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
 
                 $sql = "SELECT `value`, COUNT(*) AS `count` FROM `$table` WHERE `attribute_id` = " . $attribute_id . " GROUP BY `value`";
                 $rows = $adapter->fetchAll($sql);
+                $usage = $this->countUsage($rows);
 
-                if (count($rows) >= 0 && count($rows) <= 2) {
+                if( $usage === 0 ) {
 
                     $this->log("Attribute NOT in use! Must be deleted");
                     $esito = $this->deleteAttribute($attribute);
@@ -66,7 +67,7 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
 
                 } else {
 
-                    $this->log("Attribute in use, not deleting");
+                    $this->log("Attribute in use by " . $usage. " products, not deleting");
                     $arrReport['kept'][] = $attribute_code;
                 }
             }
@@ -90,8 +91,16 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
             return "Dry run is active";
         }
 
-        //
-        $esito = $attribute->delete();
+        try {
+
+            $esito = $attribute->delete();
+
+        } catch (Exception $ex) {
+
+            $message = "!!! CRITICAL ERROR - Exception, unable to delete: " . $ex->getMessage();
+            return $message;
+        }
+
 
         if($esito) {
 
@@ -99,8 +108,7 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
 
         } else {
 
-            $message    = error_get_last()["message"];
-            $message    = "!!! CRITICAL ERROR - Unable to delete: " . $message;
+            $message    = "!!! CRITICAL ERROR - Error, unable to delete: " . error_get_last()["message"];
             return $message;
         }
     }
@@ -133,5 +141,33 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
         $txt = file_get_contents(Mage::getModuleDir("data", "Boraso_AttributeCleaner") . DIRECTORY_SEPARATOR . 'magento_default_attributes.txt');
         $arrAttrCodes = explode(PHP_EOL, $txt);
         return $arrAttrCodes;
+    }
+
+
+    protected function countUsage($rows)
+    {
+        if( empty($rows) ) {
+
+            return 0;
+        }
+
+
+        if( count($rows) === 1 && $rows[0]["value"] === null ) {
+
+            return 0;
+        }
+
+
+        //count usage
+        $total_usage = 0;
+        foreach($rows as $key => $value) {
+
+            if( $value["value"] !== null ) {
+
+                $total_usage += $value["count"];
+            }
+        }
+
+        return $total_usage;
     }
 }
