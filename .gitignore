@@ -27,11 +27,10 @@ __MACOSX
 *.DS_Store*
 ._*
 .Spotlight-V100
-.Trashes
+.Trash*
 ehthumbs.db
 Thumbs.db
 desktop.ini
-
 
 # Let's Encrypt #
 #################

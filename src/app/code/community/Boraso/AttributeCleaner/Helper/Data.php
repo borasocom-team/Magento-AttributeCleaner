@@ -8,6 +8,7 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
 
         //
         $arrExcludedAttrCodes   = $this->getExcludedAttrCodes(); //attribute_codes di default di Magento -> da conservare sempre
+        $arrAttrIdsInSelectedSections = Mage::getModel("boraso_attributecleaner/adminsections")->getAttributeIdsInSelectedSections(); //sezioni sulle quali operare
         $arrReport              = array( 'deleted' => array(), 'kept' => array(), 'skipped' => array(), "err" => array() );
 
         $product                = Mage::getModel('catalog/product');
@@ -21,9 +22,8 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
 
                 $attribute_code     = $attribute->getAttributeCode();
                 $attribute_id       = $attribute->getAttributeId();
-                $attribute_system   = $attribute->getIsUserDefined() ? false : true;
 
-                $this->log("### Processing an attribute file", "-");
+                $this->log("### Processing an attribute", "-");
                 $this->log("#" . $attribute_code . "# [" . $attribute_id . "]");
                 $this->log("#" . $table . "#");
 
@@ -36,13 +36,20 @@ class Boraso_AttributeCleaner_Helper_Data extends Mage_Core_Helper_Abstract
                 }
 
 
-                if( $attribute_system ) {
+                if( !$attribute->getIsUserDefined() ) {
 
                     $this->log("This is a System, not User-defined attribute. Skipping.");
                     $arrReport['skipped'][] = $attribute_code;
                     continue;
                 }
 
+
+                if( !in_array($attribute_id, $arrAttrIdsInSelectedSections) ) {
+
+                    $this->log("This attribute is in a section not selected in `Limit by admin section`. Skipping.");
+                    $arrReport['skipped'][] = $attribute_code;
+                    continue;
+                }
 
                 $sql = "SELECT `value`, COUNT(*) AS `count` FROM `$table` WHERE `attribute_id` = " . $attribute_id . " GROUP BY `value`";
                 $rows = $adapter->fetchAll($sql);
